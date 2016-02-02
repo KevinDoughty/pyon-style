@@ -1,0 +1,27 @@
+{
+  "name": "pyon-style",
+  "version": "0.0.1",
+  "description": "Animation layers for inline CSS styles",
+  "main": "pyon-style",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KevinDoughty/pyon-style.git"
+  },
+  "keywords": [
+    "relative",
+    "additive",
+    "animation",
+    "layers",
+    "CSS",
+    "style"
+  ],
+  "author": "Kevin Doughty",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/KevinDoughty/pyon-style/issues"
+  },
+  "homepage": "https://github.com/KevinDoughty/pyon-style#readme"
+}
