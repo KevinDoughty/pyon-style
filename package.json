@@ -1,6 +1,6 @@
 {
   "name": "pyon-style",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Animation layers for inline CSS styles",
   "main": "pyon-style",
   "scripts": {
@@ -24,7 +24,7 @@
     "url": "https://github.com/KevinDoughty/pyon-style/issues"
   },
   "dependencies": {
-    "pyon": "^0.0.8"
+    "pyon": "^0.0.9"
   },
   "homepage": "https://github.com/KevinDoughty/pyon-style#readme"
 }
