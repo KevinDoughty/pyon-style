@@ -193,10 +193,7 @@ window.Element.prototype.setPyonDelegate = function(delegate, oldStyle) {
   //this.style._pyonDelegate = delegate;
 }
 */
-PyonStyle.setDelegate = function(element, delegate, oldStyle) {
-  ensureTargetCSSInitialized(element, delegate, oldStyle);
-  //element.style._pyonDelegate = delegate;
-}
+
 PyonStyle.addAnimation = function(element, animation, named) { // TODO: needs delegate and ensureTargetCSSInitialized
   if (typeof element === "undefined" || element === null) return;
   ensureTargetCSSInitialized(element);
@@ -216,26 +213,21 @@ PyonStyle.addAnimation = function(element, animation, named) { // TODO: needs de
       element.style._controller.addAnimation(animation, named);
     }
   }
-  
-//   if (oldStyle) {
-//     Object.keys(oldStyle).forEach( function(key,index) {
-//       var value = owner._style[key];
-//       var type = getType(key);
-//       if (isFunction(type)) type = new type();
-//       var serializedValue = type.fromCssValue(value);
-//       owner._controller.registerAnimatableProperty(key);
-//       owner._layer[key] = serializedValue;
-//     }.bind(owner));
-//   }
+}
+
+PyonStyle.setDelegate = function(element, delegate, oldStyle) {
+  //ensureTargetCSSInitialized(element, delegate, oldStyle); // PyonReact
+  var animatedStyle = ensureTargetCSSInitialized(element, delegate, oldStyle); // PyonReact
+  if (!element) return animatedStyle // PyonReact
 }
 
 function ensureTargetCSSInitialized(target, delegate, oldStyle) {
-    if (target.style._pyonInitialized) return;
+    //if (target.style._pyonInitialized) return; // PyonReact
+    if (target && target.style._pyonInitialized) return; // PyonReact
 
-    //console.log("ensure target:%s; delegate:%s; oldStyle:%s;", target, delegate, JSON.stringify(oldStyle));
-      
 //     try {
       var animatedStyle = new PyonStyleDeclaration(target, delegate, oldStyle);
+      if (!target) return animatedStyle;
       //console.log("ensure try animatedStyle:%s;",animatedStyle);
       Object.defineProperty(target, 'style', configureDescriptor({
         get: function() { 
@@ -247,8 +239,7 @@ function ensureTargetCSSInitialized(target, delegate, oldStyle) {
 //       patchInlineStyleForAnimation(target.style);
 //       console.log("ensure error !!!!!");
 //     }
-    target.style._pyonInitialized = true; // formerly _webAnimationsStyleInitialized
-    //console.log("ensured!");
+    target.style._pyonInitialized = true; // PyonReact // formerly _webAnimationsStyleInitialized
   }
 
 
@@ -265,18 +256,19 @@ function animationFromDescription(description) { // duplicate, from pyon
 }
 
   var PyonStyleDeclaration = function(element, delegate, oldStyle) {
-    if (element.style instanceof PyonStyleDeclaration) throw new Error('Element must not already have an animated style attached.');
+    if (element && element.style instanceof PyonStyleDeclaration) throw new Error('Element must not already have an animated style attached.'); // PyonReact
 
     // Stores the inline style of the element on its behalf while the
     // polyfill uses the element's inline style to simulate web animations.
     // This is needed to fake regular inline style CSSOM access on the element.
     this._surrogateElement = createDummyElement();
-    this._style = element.style;
+    this._style; // PyonReact
+    if (element !== null) this._style = element.style; // PyonReact
     this._length = 0;
     this._isAnimatedProperty = {};
     this._element = element;
     // Populate the surrogate element's inline style.
-    copyInlineStyle(this._style, this._surrogateElement.style);
+    if (element !== null) copyInlineStyle(this._style, this._surrogateElement.style); // PyonReact
     this._updateIndices();
     var owner = this;
     
@@ -293,9 +285,8 @@ function animationFromDescription(description) { // duplicate, from pyon
         if (owner._pyonDelegate && isFunction(owner._pyonDelegate.animationForKey)) {
           var animationFunction = owner._pyonDelegate.animationForKey;
           var propertyType = getType(key);
-          //if (isFunction(type)) type = new type();
           var deserializedValue = propertyType.toCssValue(value);
-          var description = owner._pyonDelegate.animationForKey(key,deserializedValue,this._element);
+          var description = owner._pyonDelegate.animationForKey.call(owner._pyonDelegate,key,deserializedValue,this._element);
           var animation = animationFromDescription(description);
           if (animation) {
             if (typeof animation.property === "undefined") animation.property = key;
@@ -309,11 +300,14 @@ function animationFromDescription(description) { // duplicate, from pyon
               from = owner._layer[key];
               if (typeof from === "undefined" || from === null) from = animationType.zero();
             } else from = animationType.fromCssValue(from);
-            animation.from = from
+            animation.from = from;
             
+//             if (typeof to === "undefined" || to === null) to = value;
+//             if (typeof to !== "undefined" && to !== null) to = animationType.fromCssValue(to);
+//             else to = animationType.zero();
+//             animation.to = to;
             if (typeof to === "undefined" || to === null) to = value;
-            if (typeof to !== "undefined" && to !== null) to = animationType.fromCssValue(to);
-            else to = animationType.zero();
+            else to = animationType.fromCssValue(to);
             animation.to = to;
             
             if (animation.blend !== "absolute") animation.delta = animationType.subtract(from,to);
@@ -333,7 +327,7 @@ function animationFromDescription(description) { // duplicate, from pyon
         
         var previousKeys = Object.keys(owner._previousPresentationLayer);
         previousKeys.forEach( function(key,index) { // Must nullify properties that are no longer animated, if not on presentationLayer.
-          if (presentationKeys.indexOf(key) === -1) { // FIXME: Danger! Sort & walk keys? Not too bad if animating few properties.
+          if (presentationKeys.indexOf(key) === -1) { // FIXME: Sort & walk keys? Not too bad if animating few properties.
             owner._style[key] = "";
           }
         });
@@ -361,7 +355,7 @@ function animationFromDescription(description) { // duplicate, from pyon
         owner._controller.registerAnimatableProperty(key);
         owner._layer[key] = serializedValue;
       }.bind(owner));
-    } else {
+    } else if (element !== null) { // PyonReact
       for (var i = 0; i < this._style.length; i++) {
         var property = this._style[i];
         var type = getType(property);
