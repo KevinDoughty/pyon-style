@@ -150,7 +150,6 @@ window.Element.prototype.addPyonAnimation = function(animation,named) {
   // want copy: 
   //animation = animationFromDescription(animation);
   var key = animation.property;
-  console.log("key:%s;",key);
   var type = getType(key);
   if (isFunction(type)) type = new type();
   animation.type = type;
@@ -171,9 +170,6 @@ window.Element.prototype.removeAllPyonAnimations = function() {
 }
 window.Element.prototype.pyonAnimations = function() {
   ensureTargetCSSInitialized(this);
-  //console.log("pyonAnimations style:%s;",this.style);
-  //console.log("pyonAnimations controller:%s;",this.style._controller);
-  //console.log("pyonAnimations animations:%s;",this.style._controller.animations);
   return this.style._controller.animations;
 }
 window.Element.prototype.pyonAnimationNames = function() {
@@ -228,13 +224,11 @@ function ensureTargetCSSInitialized(target, delegate, oldStyle) {
 //     try {
       var animatedStyle = new PyonStyleDeclaration(target, delegate, oldStyle);
       if (!target) return animatedStyle;
-      //console.log("ensure try animatedStyle:%s;",animatedStyle);
       Object.defineProperty(target, 'style', configureDescriptor({
         get: function() { 
           return animatedStyle;
         }
       }));
-      //console.log("ensure try target:%s; style:%s;",target,oldStyle);
 //     } catch (error) {
 //       patchInlineStyleForAnimation(target.style);
 //       console.log("ensure error !!!!!");
@@ -613,9 +607,6 @@ var numberType = createObject(Pyon.ValueType, {
     return "numberType";
   },
   inverse: function(base) {
-    if (Number(base) != base) {
-      console.log("numberType INVERSE not a number, base:%s;",base);
-    }
     if (base === 'auto') {
       return nonNumericType.inverse(base);
     }
@@ -626,17 +617,10 @@ var numberType = createObject(Pyon.ValueType, {
     return 0; 
   },
   add: function(base, delta) {
-  
-    if (Number(base) !== base && Number(delta) !== delta) {
-      return 0;
-      //console.log("* numberType ADD not a number, BASE:%s; DELTA:%s;",JSON.stringify(base),JSON.stringify(delta));
-    } else if (Number(base) !== base) {
-      base = 0;
-      //console.log("* numberType ADD not a number, BASE:%s; delta:%s;",JSON.stringify(base),JSON.stringify(delta));
-    } else if (Number(delta) !== delta) {
-      delta = 0;
-      //console.log("* numberType ADD not a number, base:%s; DELTA:%s;",JSON.stringify(base),JSON.stringify(delta));
-    }
+    if (Number(base) !== base && Number(delta) !== delta) return 0;
+    else if (Number(base) !== base) base = 0;
+    else if (Number(delta) !== delta) delta = 0;
+
     // If base or delta are 'auto', we fall back to replacement.
     if (base === 'auto' || delta === 'auto') {
       return nonNumericType.add(base, delta);
@@ -646,29 +630,10 @@ var numberType = createObject(Pyon.ValueType, {
     return result;
   },
   subtract: function(base,delta) { // KxDx
-    
     var inverse = this.inverse(delta);
-    if (Number(base) !== base && Number(delta) !== delta) {
-      return 0;
-      //console.log("* numberType SUBTRACT not a number, BASE:%s; DELTA:%s;",JSON.stringify(base),JSON.stringify(delta));
-    } else if (Number(base) !== base) {
-      base = 0;
-      //console.log("* numberType SUBTRACT not a number, BASE:%s; delta:%s;",JSON.stringify(base),JSON.stringify(delta));
-    } else if (Number(delta) !== delta) {
-      delta = 0;
-      //console.log("* numberType SUBTRACT not a number, base:%s; DELTA:%s;",JSON.stringify(base),JSON.stringify(delta));
-    }
-    /*
-    if (Number(base) !== base) {
-      console.log("numberType SUBTRACT not a number, base:%s;",base);
-    }
-    if (Number(delta) !== delta) {
-      console.log("numberType SUBTRACT not a number, delta:%s;",delta);
-    }
-    if (Number(inverse) !== inverse) {
-      console.log("numberType SUBTRACT not a number, inverse:%s;",inverse);
-    }
-    */
+    if (Number(base) !== base && Number(delta) !== delta) return 0;
+    else if (Number(base) !== base) base = 0;
+    else if (Number(delta) !== delta) delta = 0;
     return this.add(base,this.inverse(delta));
   },
   interpolate: function(from, to, f) {
@@ -764,7 +729,6 @@ var percentLengthType = createObject(Pyon.ValueType, {
     }
     var out = {};
     for (var value in base) {
-      //console.log("value:%s;",value);
       out[value] = base[value] + (delta[value] || 0);
     }
     for (value in delta) {
@@ -1591,7 +1555,6 @@ var colorType = typeWithKeywords(['currentColor'], createObject(Pyon.ValueType, 
     return [value[0] * alpha, value[1] * alpha, value[2] * alpha];
   },
   add: function(base, delta) {
-    console.log("colorType add base:%s; delta:%s;",JSON.stringify(base),JSON.stringify(delta));
     var alpha = Math.min(base[3] + delta[3], 1);
     if (alpha === 0) {
       return [0, 0, 0, 0];
@@ -1928,7 +1891,6 @@ var decomposeMatrix = (function() {
   }
 
   function decomposeMatrix(matrix) {
-    console.log("sub decomposeMatrix:%s;",JSON.stringify(matrix));
     var m3d = [[matrix[0], matrix[1], 0, 0],
                [matrix[2], matrix[3], 0, 0],
                [0, 0, 1, 0],
@@ -2080,7 +2042,6 @@ function convertItemToMatrix(item) { // !!!
 }
 
 function convertToMatrix(transformList) {
-  console.log("convertToMatrix:%s;",JSON.stringify(transformList));
   return transformList.map(convertItemToMatrix).reduce(multiplyMatrices);
 }
 
@@ -2152,7 +2113,6 @@ var composeMatrix = (function() {
 })();
 
 function interpolateTransformsWithMatrices(from, to, f) {
-  console.log("interpolateTransformsWithMatrices from:%s; to:%s; f:%s;",JSON.stringify(from),JSON.stringify(to),f);
   var fromM = decomposeMatrix(convertToMatrix(from));
   var toM = decomposeMatrix(convertToMatrix(to));
 
@@ -2182,8 +2142,7 @@ function interpolateTransformsWithMatrices(from, to, f) {
 
 function interpTransformValue(from, to, f) {
   var type = from.t ? from.t : to.t;
-  //console.log("interpTransformValue from:%s:%s; to:%s:%s; f:%s; type:%s;",JSON.stringify(from),from.toString(),JSON.stringify(to),to.toString(),f,type);
-    switch (type) {
+  switch (type) {
     // Transforms with unitless parameters.
     case 'rotate':
     case 'rotateX':
@@ -2215,7 +2174,6 @@ function interpTransformValue(from, to, f) {
         var toVal = to.d ? to.d[j] : {};
         result.push(lengthType.interpolate(fromVal, toVal, f));
       }
-      //console.log("interp result:%s;",JSON.stringify(result));
       return {t: type, d: result};
   }
 }
@@ -2241,7 +2199,6 @@ var transformType = createObject(Pyon.ValueType, {
     return "transformType";
   },
   inverse: function(value) { // KxDx // TODO: SVG mode! see toCssValue // Using numberType not lengthType for transforms and perspective, probably should revert back
-    var verbose = false;
     // TODO: fix this :) matrix is way off // need SVG mode! see toCssValue // Using numberType not lengthType for transforms and perspective, probably should revert back
     var delta = this.zero(value);
     var out = [];
@@ -2288,12 +2245,10 @@ var transformType = createObject(Pyon.ValueType, {
           break;
       }
     }
-    if (verbose) console.log("TransformType inverse out:%s;",JSON.stringify(out));
     return out;
   },
   
   add: function(base, delta) {
-    //console.log("transform type add base:%s; delta:%s;",JSON.stringify(base),JSON.stringify(delta));
     if (!base) { // This happens often...
       //throw("transformType add with no base!");
       base = [];
@@ -2320,7 +2275,6 @@ var transformType = createObject(Pyon.ValueType, {
   
   
   sum: function(value,delta) { // add is for the full values, sum is for their components // need SVG mode! see toCssValue // Using numberType not lengthType for transforms and perspective, probably should revert back
-    var verbose = false;
     // TODO: fix this :) matrix is way off // need SVG mode! see toCssValue // Using numberType not lengthType for transforms and perspective, probably should revert back
     var out = [];
     var valueLength = value.length;
@@ -2372,21 +2326,18 @@ var transformType = createObject(Pyon.ValueType, {
             out.push({ t : value[i].t, d : [numberType.add(value[i].d[0],delta[j].d[0]), numberType.add(value[i].d[1],delta[j].d[1]), numberType.add(value[i].d[2],delta[j].d[2]), numberType.add(value[i].d[3],delta[j].d[3]), numberType.add(value[i].d[4],delta[j].d[4]), numberType.add(value[i].d[5],delta[j].d[5])] });
             break;
           case "matrix3d":
-            console.log("TransformType sum matrix3d not supported");
+            console.warn("TransformType sum matrix3d not supported");
           default:
-            console.log("TransformType sum no type?");
+            throw new Error("TransformType sum no type?");
         }
         j++;
       }
     }
-    if (verbose) console.log("TransformType sum out:%s;",JSON.stringify(out));
     return out;
   },
   
   zero: function(value) { // KxDx // requires an old value for type // need SVG mode! see toCssValue // Using numberType not lengthType for transforms and perspective, probably should revert back
-    var verbose = false;
     // TODO: fix this :) matrix is way off // need SVG mode! see toCssValue // Using numberType not lengthType for transforms and perspective, probably should revert back
-    //console.log("TransformType zero:%s;",JSON.stringify(value));
     var identity2dMatrix = [1, 0, 0, 1, 0 ,0];
     if (!value) return [{ t : "matrix", d : identity2dMatrix }];
     var out = [];
@@ -2436,9 +2387,7 @@ var transformType = createObject(Pyon.ValueType, {
           break;
       }
     }
-    if (verbose) console.log("TransformType zero out:%s;",JSON.stringify(out));
     return out;
-    
   },
   
   
@@ -2450,11 +2399,9 @@ var transformType = createObject(Pyon.ValueType, {
   
   
   interpolate: function(from, to, f) {
-    //console.log("interpolate from:%s:%s; to:%s:%s; f:%s;",JSON.stringify(from),from.toString(),JSON.stringify(to),to.toString(),f);
     var out = [];
     for (var i = 0; i < Math.min(from.length, to.length); i++) {
       if (from[i].t !== to[i].t) {
-        console.log("BREAK");
         break;
       }
       out.push(interpTransformValue(from[i], to[i], f));
@@ -2559,7 +2506,6 @@ var transformType = createObject(Pyon.ValueType, {
     if (value === undefined) {
       return undefined;
     }
-    if (value === "none") console.log("N-O-N-E");
     var result = [];
     while (value.length > 0) {
       var r;
@@ -2774,28 +2720,6 @@ var getCssOnlyType = function(property) {
 
 
 var add = function(property, base, delta, typeObject) { // Called from AddReplaceCompositableValue compositeOnto // transform is an array of rawValues, borderTopWidth is a rawValue, opacity is just a number
-  //console.log("ADD property:%s; base:%s; delta:%s;",property,JSON.stringify(base),JSON.stringify(delta));
-  
-  // ADD property:transform; 
-  // base:[{"t":"translate3d","d":[{"px":0},{"px":0.3636363066367203},{"px":0}]}]; 
-  // delta:[{"t":"translate3d","d":[{"px":261},{"px":517},{"px":0}]}];
-  
-  // ADD property:transform; 
-  // base:[{"t":"matrix","d":[1,0,0,1,400,0]}]; 
-  // delta:[{"t":"translate3d","d":[{"px":0},{"px":0},{"px":0}]}];
-  
-  // ADD property:opacity;
-  // base:1; 
-  // delta:0;
-  
-  // ADD property:borderTopWidth; 
-  // base:{"px":19}; 
-  // delta:{"px":-18};
-  
-  // ADD property:flattened; 
-  // base:{"t":"array","d":["<TreeModel2 (qwerty 11) [0]>","<TreeModel4 (zxcvb) [1]>","<TreeModel3 (uiop) [1,0]>"]}; 
-  // delta:{"t":"array","d":["<TreeModel0 (qwerty 0) [0,0]>","<TreeModel1 (qwerty12) [0,1]>"]};
-  
   if (delta === rawNeutralValue) return base;
   if (base === 'inherit' || delta === 'inherit') return nonNumericType.add(base, delta);
   return typeObject.add(base, delta);
@@ -2815,7 +2739,6 @@ var add = function(property, base, delta, typeObject) { // Called from AddReplac
  *   will return 'rotate(43deg)'.
  */
 var interpolate = function(property, from, to, f) { // getType problem. values are rawValues not cssValues. Only works because property. Arbitrary types will fail. Called from BlendedCompositableValue compositeOnto:
-  //console.log("interpolate:%s; to:%s; type:%s;",property,JSON.stringify(to),getType(property,to).toString());
   ASSERT_ENABLED && assert(isDefinedAndNotNull(from) && isDefinedAndNotNull(to), 'Both to and from values should be specified for interpolation');
   if (from === 'inherit' || to === 'inherit') {
     return nonNumericType.interpolate(from, to, f);
