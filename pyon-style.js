@@ -191,6 +191,7 @@ window.Element.prototype.setPyonDelegate = function(delegate, oldStyle) {
 */
 
 PyonStyle.addAnimation = function(element, animation, named) { // TODO: needs delegate and ensureTargetCSSInitialized
+  if (typeof window === "undefined") return;
   if (typeof element === "undefined" || element === null) return;
   ensureTargetCSSInitialized(element);
   
@@ -212,6 +213,7 @@ PyonStyle.addAnimation = function(element, animation, named) { // TODO: needs de
 }
 
 PyonStyle.setDelegate = function(element, delegate, oldStyle) {
+  if (typeof window === "undefined") return;
   //ensureTargetCSSInitialized(element, delegate, oldStyle); // PyonReact
   var animatedStyle = ensureTargetCSSInitialized(element, delegate, oldStyle); // PyonReact
   if (!element) return animatedStyle // PyonReact
@@ -459,8 +461,9 @@ function animationFromDescription(description) { // duplicate, from pyon
           if (isFunction(type)) type = new type();
           
           var ugly = type.fromCssValue(value);
-          this._layer[property] = ugly; // This will produce animations from and to the ugly values, not CSS values.
           this._controller.registerAnimatableProperty(property);
+          this._layer[property] = ugly; // This will produce animations from and to the ugly values, not CSS values.
+          //this._controller.registerAnimatableProperty(property);
           
           this._surrogateElement.style[property] = value;
           this._updateIndices();
